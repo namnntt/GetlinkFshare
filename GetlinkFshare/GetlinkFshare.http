@@ -1,0 +1,6 @@
+@GetlinkFshare_HostAddress = http://localhost:5294
+
+GET {{GetlinkFshare_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

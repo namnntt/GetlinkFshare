@@ -1,0 +1,33 @@
+/* CSS tùy chỉnh cho hiệu ứng loading */
+.loader {
+    border: 4px solid #f3f3f3;
+    /* light grey */
+    border-top: 4px solid #3498db;
+    /* blue */
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* *** ĐÃ SỬA: Ghi đè style của Facebook comment plugin để đảm bảo responsive *** */
+/* Buộc container của plugin chiếm toàn bộ chiều rộng */
+.fb-comments {
+    width: 100% !important;
+}
+
+    /* Facebook bọc iframe trong một thẻ span thường có width cố định. Ghi đè nó. */
+    .fb-comments > span,
+    .fb-comments > span > iframe[style] {
+        width: 100% !important;
+    }

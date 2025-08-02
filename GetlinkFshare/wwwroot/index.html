@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fshare API Client</title>
+    <!-- Thư viện ngoài -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Link tới file CSS tùy chỉnh -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen font-sans">
+
+    <!-- Load Facebook SDK for JavaScript -->
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous"
+            src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v20.0&appId=YourAppIdHere&autoLogAppEvents=1"
+            nonce="aBcDeFgH"></script>
+
+    <div class="w-full max-w-xl bg-white rounded-lg shadow-md p-8">
+
+        <!-- PHẦN ĐĂNG NHẬP -->
+        <div id="login-section">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập API</h1>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Tên đăng nhập:</label>
+                    <input type="text" id="username" value="testuser"
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu:</label>
+                    <input type="password" id="password" value="password123"
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                        Đăng nhập
+                    </button>
+                </div>
+            </form>
+            <div id="login-message" class="mt-4 text-center"></div>
+        </div>
+
+        <!-- PHẦN LẤY LINK (ban đầu bị ẩn) -->
+        <div id="scraping-section" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Lấy Link Tải Fshare</h1>
+                <button id="logout-button"
+                        class="bg-red-500 hover:bg-red-700 text-white text-sm font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline">
+                    Đăng
+                    xuất
+                </button>
+            </div>
+            <p class="text-green-600 text-sm mb-4">Đăng nhập thành công! Bây giờ bạn có thể lấy link tải.</p>
+            <form id="scraping-form">
+                <div class="mb-4">
+                    <label for="fshareUrl" class="block text-gray-700 text-sm font-bold mb-2">Nhập URL Fshare:</label>
+                    <input type="text" id="fshareUrl" placeholder="https://www.fshare.vn/file/..."
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit"
+                            class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full flex items-center justify-center">
+                        <span class="button-text">Chuẩn bị Link Tải</span>
+                        <div class="loader hidden ml-3"></div>
+                    </button>
+                </div>
+            </form>
+            <!-- Nơi hiển thị kết quả và nút download -->
+            <div id="scraping-result" class="mt-6 p-4 bg-gray-50 rounded border border-gray-200 hidden">
+                <!-- Nội dung sẽ được tạo bằng JavaScript -->
+            </div>
+
+            <!-- *** KHU VỰC BÌNH LUẬN FACEBOOK ĐÃ ĐƯỢC DI CHUYỂN VÀO ĐÂY *** -->
+            <div class="mt-10 border-t pt-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Report lỗi vào đây</h2>
+                <!-- Mã nhúng ô bình luận -->
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <!-- *** ĐÃ THÊM: data-order-by="reverse_time" để sắp xếp theo mới nhất *** -->
+                    <div class="fb-comments" data-href="https://getlinkfsharevoz.ddns.net/" data-width="100%" 
+                         data-numposts="5" data-order-by="reverse_time"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link tới file JavaScript logic -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
