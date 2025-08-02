@@ -92,7 +92,7 @@ scp -r ./publish_linux/* your_username@your_server_ip:/var/www/fshare_api/
 
 3.	Cấp quyền sở hữu và thực thi:
 sudo chown -R www-data:www-data /var/www/fshare_api
-sudo chmod +x /var/www/fshare_api/PuppeteerApiDemo
+sudo chmod +x /var/www/fshare_api/GetlinkFshare
 
 Bước 4: Tạo Systemd Service File
 1.	Tạo và mở file service bằng nano:
@@ -104,7 +104,7 @@ Description=Fshare Getlink API Service
 
 [Service]
 WorkingDirectory=/var/www/fshare_api
-ExecStart=/var/www/fshare_api/PuppeteerApiDemo
+ExecStart=/var/www/fshare_api/GetlinkFshare
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
