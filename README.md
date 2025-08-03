@@ -1,3 +1,10 @@
+Cài đặt acc Fshare VIP
+-> Xóa các phiên đăng nhập
+-> Tự động tải xuống khi truy cập liên kết tệp tin
+<img width="2517" height="1107" alt="image" src="https://github.com/user-attachments/assets/b1c9a8ab-8069-4073-a095-78fdb822cc31" />
+<img width="1322" height="514" alt="image" src="https://github.com/user-attachments/assets/d8a0a9a9-d0dd-47c8-85e3-3a018e95cb38" />
+
+
 Đây là hướng dẫn chi tiết deploy ứng dụng cho Linux ->
 Xem thêm file Programs và file appsettings.Production để biết chi tiết comment:
 
