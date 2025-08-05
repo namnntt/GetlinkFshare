@@ -26,25 +26,31 @@ namespace GetlinkFshare.Services
         private async Task<IBrowser> InitializeBrowserAsync()
         {
             _logger.LogInformation("--> Đang tải trình duyệt (nếu cần)...");
-            // Để Puppeteer tự quản lý việc tải về thư mục mặc định.
-            // Điều này sẽ hoạt động tốt vì chúng ta đã cấp quyền cho thư mục ứng dụng.
             await new BrowserFetcher().DownloadAsync();
             _logger.LogInformation("--> Tải trình duyệt hoàn tất.");
 
             var launchOptions = new LaunchOptions
             {
                 Headless = true,
-                Args = new[]
-                {
-                "--no-sandbox",
+                Args = new[] { "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
-                "--disable-gpu"
-            }
+                "--disable-gpu" }
             };
 
             _logger.LogInformation("--> Đang khởi chạy trình duyệt...");
             var browser = await Puppeteer.LaunchAsync(launchOptions);
+
+            // *** ĐÃ SỬA LỖI: Sử dụng lệnh CDP mới và chính xác ***
+            // Tạo một session trực tiếp từ target chính của trình duyệt.
+            var client = await browser.Target.CreateCDPSessionAsync();
+            // Ra lệnh chặn tất cả các lượt download bằng lệnh 'Browser.setDownloadBehavior'.
+            await client.SendAsync("Browser.setDownloadBehavior", new
+            {
+                behavior = "deny"
+            });
+
+            _logger.LogInformation("--> Hành vi download mặc định đã được đặt thành 'deny'.");
             _logger.LogInformation("--> Khởi chạy trình duyệt thành công!");
             return browser;
         }
@@ -89,9 +95,6 @@ namespace GetlinkFshare.Services
             try
             {
                 _logger.LogInformation($"--> Đang xử lý Fshare URL: {fshareUrl}");
-
-                var client = await page.Target.CreateCDPSessionAsync();
-                await client.SendAsync("Page.setDownloadBehavior", new { behavior = "deny" });
 
                 var tcs = new TaskCompletionSource<(string Url, long? FileSize)>();
 
