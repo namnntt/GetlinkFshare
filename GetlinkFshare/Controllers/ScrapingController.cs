@@ -9,8 +9,8 @@ using System.Text.RegularExpressions;
 
 namespace GetlinkFshare.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ScrapingController : ControllerBase
     {
         private readonly PuppeteerService _puppeteerService;
@@ -33,23 +33,30 @@ namespace GetlinkFshare.Controllers
                 return BadRequest("Fshare URL không hợp lệ.");
             }
 
-            var (directLink, cookies, fileName, fileSize, userAgent, refererUrl) = await _puppeteerService.GetDownloadInfoAsync(fshareUrl);
-
-            if (string.IsNullOrEmpty(directLink) || cookies == null || string.IsNullOrEmpty(userAgent) || string.IsNullOrEmpty(refererUrl))
+            try
             {
-                return StatusCode(500, "Không thể lấy thông tin tải file từ Fshare.");
+                var downloadInfo = await _puppeteerService.GetDownloadInfoAsync(fshareUrl);
+
+                if (downloadInfo == null)
+                {
+                    return StatusCode(500, "Không thể lấy thông tin tải file từ Fshare.");
+                }
+
+                var token = Guid.NewGuid().ToString();
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromHours(2));
+
+                _cache.Set(token, downloadInfo, cacheEntryOptions);
+
+                var proxyUrl = Url.Action("ExecuteDownload", "Scraping", new { token = token }, Request.Scheme);
+
+                return Ok(new { proxyUrl, fileName = downloadInfo.FileName, fileSize = downloadInfo.FileSize });
             }
-
-            var token = Guid.NewGuid().ToString();
-            var cacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-
-            var downloadInfo = new DownloadInfo { DirectLink = directLink, Cookies = cookies, FileSize = fileSize, UserAgent = userAgent, RefererUrl = refererUrl };
-            _cache.Set(token, downloadInfo, cacheEntryOptions);
-
-            var proxyUrl = Url.Action("ExecuteDownload", "Scraping", new { token = token }, Request.Scheme);
-
-            return Ok(new { proxyUrl = proxyUrl, fileName = fileName, fileSize = fileSize });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi chuẩn bị link tải cho {Url}", fshareUrl);
+                return StatusCode(500, $"Không thể lấy thông tin tải file: {ex.Message}");
+            }
         }
 
         [HttpGet("execute-download")]
@@ -63,21 +70,35 @@ namespace GetlinkFshare.Controllers
                 return;
             }
 
-            var fileName = "unknown";
             try
             {
                 var cookieContainer = new CookieContainer();
-                foreach (var cookie in downloadInfo.Cookies)
+                // *** ĐÃ SỬA LỖI: Sao chép tất cả các thuộc tính của cookie ***
+                foreach (var cookieParam in downloadInfo.Cookies)
                 {
-                    cookieContainer.Add(new Uri(downloadInfo.DirectLink), new Cookie(cookie.Name, cookie.Value));
+                    var cookie = new Cookie
+                    {
+                        Name = cookieParam.Name,
+                        Value = cookieParam.Value,
+                        Domain = cookieParam.Domain,
+                        Path = cookieParam.Path,
+                        // *** ĐÃ SỬA LỖI: Xử lý chính xác các thuộc tính nullable boolean ***
+                        Secure = cookieParam.Secure ?? false,
+                        HttpOnly = cookieParam.HttpOnly ?? false
+                    };
+                    if (cookieParam.Expires.HasValue && cookieParam.Expires.Value > 0)
+                    {
+                        cookie.Expires = DateTimeOffset.FromUnixTimeSeconds((long)cookieParam.Expires.Value).DateTime;
+                    }
+
+                    cookieContainer.Add(cookie);
                 }
 
-                // *** ĐÃ SỬA: Tạo HttpClient với handler chứa cookie một cách chính xác ***
                 var handler = new HttpClientHandler { CookieContainer = cookieContainer, UseCookies = true };
                 using var client = new HttpClient(handler);
-
                 var request = new HttpRequestMessage(HttpMethod.Get, downloadInfo.DirectLink);
 
+                // Chỉ đặt các header cốt lõi một cách tường minh.
                 request.Headers.UserAgent.ParseAdd(downloadInfo.UserAgent);
                 request.Headers.Referrer = new Uri(downloadInfo.RefererUrl);
 
@@ -90,47 +111,33 @@ namespace GetlinkFshare.Controllers
 
                 Response.StatusCode = (int)fshareResponse.StatusCode;
 
-                var allowedResponseHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                var allowedHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "Content-Length", "Content-Type", "Content-Range", "Accept-Ranges", "ETag", "Last-Modified", "Date"
+                "Content-Length", "Content-Type", "Content-Range",
+                "Accept-Ranges", "ETag", "Last-Modified", "Date"
             };
 
-                Action<KeyValuePair<string, IEnumerable<string>>> copyHeader = (header) =>
+                foreach (var header in fshareResponse.Headers.Concat(fshareResponse.Content.Headers))
                 {
-                    if (allowedResponseHeaders.Contains(header.Key))
+                    if (allowedHeaders.Contains(header.Key))
                     {
-                        try { Response.Headers[header.Key] = header.Value.ToArray(); }
-                        catch (Exception ex) { _logger.LogWarning(ex, "Không thể sao chép header '{HeaderName}'", header.Key); }
+                        Response.Headers[header.Key] = header.Value.ToArray();
                     }
-                };
+                }
 
-                foreach (var header in fshareResponse.Headers) copyHeader(header);
-                foreach (var header in fshareResponse.Content.Headers) copyHeader(header);
-
-                fileName = WebUtility.UrlDecode(Path.GetFileName(new Uri(downloadInfo.DirectLink).AbsolutePath));
-
-                //Sửa lỗi sai tên file khi có ký tự đặc biệt
+                // Luôn tự tạo Content-Disposition để đảm bảo mã hóa chính xác
+                var fileName = downloadInfo.FileName;
                 var sanitizedFileNameFallback = Regex.Replace(fileName, @"[^\u0020-\u007E]", "_");
                 Response.Headers["Content-Disposition"] = $"attachment; filename=\"{sanitizedFileNameFallback}\"; filename*=UTF-8''{Uri.EscapeDataString(fileName)}";
 
                 var fshareStream = await fshareResponse.Content.ReadAsStreamAsync(HttpContext.RequestAborted);
                 await fshareStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
-
-                //_logger.LogWarning("--> Đã hoàn thành proxy file '{FileName}' cho người dùng.", fileName);
-            }
-            catch (OperationCanceledException)
-            {
-                //_logger.LogInformation("--> Người dùng đã hủy tải file '{FileName}'.", fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi proxy file '{FileName}' với token {Token}.", fileName, token);
-                if (!Response.HasStarted)
-                {
-                    Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    await Response.WriteAsync("Đã xảy ra lỗi trong quá trình tải file.");
-                }
+                _logger.LogInformation("Stream copy interrupted for file '{FileName}'. Exception: {ExceptionType}", downloadInfo.FileName, ex.GetType().Name);
             }
         }
     }
+
 }

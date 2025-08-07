@@ -12,9 +12,10 @@ namespace GetlinkFshare
     {
         public static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             var builder = WebApplication.CreateBuilder(args);
 
-            // ĐÃ THÊM: Cấu hình Forwarded Headers dùng cho Linux reverse proxy
+            //ĐÃ THÊM: Cấu hình Forwarded Headers dùng cho Linux reverse proxy
             //builder.Services.Configure<ForwardedHeadersOptions>(options =>
             //{
             //    options.ForwardedHeaders =

@@ -23,7 +23,7 @@ namespace GetlinkFshare.Controllers
         [AllowAnonymous]
         public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
-            if (loginRequest.Username == "testuser" && loginRequest.Password == "password123")
+            if (loginRequest.Username == "user_no12" && loginRequest.Password == "LkxZ581hMXZW")
             {
                 var tokenResponse = GenerateJwtToken(loginRequest.Username);
                 return Ok(tokenResponse);
