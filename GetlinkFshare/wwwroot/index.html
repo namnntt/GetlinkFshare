@@ -18,12 +18,12 @@
     <!-- Load Facebook SDK for JavaScript -->
     <div id="fb-root"></div>
     <script async defer crossorigin="anonymous"
-            src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v20.0&appId=YourAppIdHere&autoLogAppEvents=1"
+            src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v20.0&appId=YOUR_FACEBOOK_APPS_ID_HERE&autoLogAppEvents=1"
             nonce="aBcDeFgH"></script>
 
     <div class="w-full max-w-xl bg-white rounded-lg shadow-md p-8">
 
-        <!-- PHẦN ĐĂNG NHẬP -->
+        <!-- *** PHẦN ĐĂNG NHẬP ĐÃ ĐƯỢC HOÀN TÁC *** -->
         <div id="login-section">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập API</h1>
             <form id="login-form">
@@ -57,7 +57,12 @@
                     xuất
                 </button>
             </div>
-            <p class="text-green-600 text-sm mb-4">Đăng nhập thành công! Bây giờ bạn có thể lấy link tải.</p>
+
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+                <p class="font-bold">Lưu ý</p>
+                <p>Hệ thống chỉ hỗ trợ get link cho các file có dung lượng dưới <strong>10 GB</strong>.</p>
+            </div>
+
             <form id="scraping-form">
                 <div class="mb-4">
                     <label for="fshareUrl" class="block text-gray-700 text-sm font-bold mb-2">Nhập URL Fshare:</label>
@@ -77,13 +82,11 @@
                 <!-- Nội dung sẽ được tạo bằng JavaScript -->
             </div>
 
-            <!-- *** KHU VỰC BÌNH LUẬN FACEBOOK ĐÃ ĐƯỢC DI CHUYỂN VÀO ĐÂY *** -->
+            <!-- KHU VỰC BÌNH LUẬN FACEBOOK -->
             <div class="mt-10 border-t pt-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Report lỗi vào đây</h2>
-                <!-- Mã nhúng ô bình luận -->
                 <div class="bg-gray-100 p-4 rounded-lg">
-                    <!-- *** ĐÃ THÊM: data-order-by="reverse_time" để sắp xếp theo mới nhất *** -->
-                    <div class="fb-comments" data-href="https://getlinkfsharevoz.ddns.net/" data-width="100%" 
+                    <div class="fb-comments" data-href="https://getlinkfsharevoz.ddns.net/" data-width="100%"
                          data-numposts="5" data-order-by="reverse_time"></div>
                 </div>
             </div>

@@ -42,6 +42,16 @@ namespace GetlinkFshare.Controllers
                     return StatusCode(500, "Không thể lấy thông tin tải file từ Fshare.");
                 }
 
+                // *** ĐÃ THÊM: Giới hạn dung lượng file ***
+                const long tenGigabytes = 10L * 1024 * 1024 * 1024; // 10 GB in bytes
+                if (downloadInfo.FileSize.HasValue && downloadInfo.FileSize.Value > tenGigabytes)
+                {
+                    // Chuyển đổi sang GB để hiển thị cho người dùng
+                    var fileSizeInGB = Math.Round(downloadInfo.FileSize.Value / (1024.0 * 1024.0 * 1024.0), 2);
+                    _logger.LogWarning("Yêu cầu bị từ chối do file quá lớn: {FileName} ({FileSize} GB)", downloadInfo.FileName, fileSizeInGB);
+                    return BadRequest($"File quá lớn ({fileSizeInGB} GB). Chỉ hỗ trợ các file có dung lượng dưới 10 GB.");
+                }
+
                 var token = Guid.NewGuid().ToString();
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetSlidingExpiration(TimeSpan.FromHours(2));
